@@ -50,6 +50,7 @@ public class Layer_TopicModel implements Serializable {
 	public ArrayList<Double> Ns;//{topic順}
 	public ArrayList<Double> Nk;//{topic順}
 	public AllWordVector awv;//ワード種類
+	private ArrayList<ArrayList<Integer>> wordcorpus;
 	public ArrayList<ArrayList<Double>> Nsv;
 	public ArrayList<ArrayList<Double>> Nkv;//各topicに含まれる数：awvに対応[ワード種類,topic]
 	public double V;//単語種類数
@@ -124,12 +125,10 @@ public class Layer_TopicModel implements Serializable {
 		//Zdn,Ndk初期化：全て-1,0
 		ZSdn = new ArrayList<ArrayList<Integer>>((int) V);
 		ZKdn = new ArrayList<ArrayList<Integer>>((int) V);
-		//Nds = new HashMap<String, ArrayList<Double>>();
 		Nds = new ArrayList<ArrayList<Double>>(sentence.size());
-		//Ndk = new HashMap<String, ArrayList<Double>>();
 		Ndk = new ArrayList<ArrayList<Double>>(sentence.size());
-		//Ndsk = new HashMap<String, HashMap<Integer, ArrayList<Double>>>();
 		Ndsk = new ArrayList<HashMap<Integer, ArrayList<Double>>>(sentence.size());
+		wordcorpus = new ArrayList<ArrayList<Integer>>(sentence.size());
 
 		for (int i = 0; i < sentence.size(); i++) {
 			ArrayList<Integer> tmpzs = new ArrayList<Integer>((int)topic_S);
@@ -151,12 +150,25 @@ public class Layer_TopicModel implements Serializable {
 				tmpnsk.put(j, tmpsk);
 			}
 			for (int j = 0; j < topic_K; j++) tmpnk.add(0.);
-			//Nds.put(sentence.get(i), tmpns);
 			Nds.add(tmpns);
-			//Ndk.put(sentence.get(i), tmpnk);
 			Ndk.add(tmpnk);
-			//Ndsk.put(sentence.get(i), tmpnsk);
 			Ndsk.add(i, tmpnsk);
+
+			//corpus setting
+			ArrayList<Integer> tmpc = new ArrayList<Integer>(origin.get(i).size());
+			for (int j = 0; j < origin.get(i).size(); j++) {
+				for (int k = 0; k < awv.CollectWrd.size(); k++) {
+					int c = -1;
+					if (awv.CollectWrd.get(k).equals(origin.get(i).get(j)) &&
+							awv.CollectHnsh.get(k).equals(hinshi.get(i).get(j)) &&
+							awv.CollectDHnsh.get(k).equals(dhinshi.get(i).get(j))) {
+						c = k;
+						break;
+					}
+					tmpc.add(c);
+				}
+			}
+			wordcorpus.add(tmpc);
 		}
 
 		//Nkv初期化：
@@ -193,24 +205,12 @@ public class Layer_TopicModel implements Serializable {
 			for (int j = 0; j < origin.get(i).size(); j++) {
 				int zsdn = ZSdn.get(i).get(j);
 				int zkdn = ZKdn.get(i).get(j);
-				//String sntnc = sentence.get(i);
-				int nskv = -1;//Nkvの位置
-				for (int k = 0; k < awv.CollectWrd.size(); k++) {
-					if (awv.CollectWrd.get(k).equals(origin.get(i).get(j)) &&
-							awv.CollectHnsh.get(k).equals(hinshi.get(i).get(j)) &&
-							awv.CollectDHnsh.get(k).equals(dhinshi.get(i).get(j))) {
-						nskv = k;
-						break;
-					}
-				}
+				int nskv = wordcorpus.get(i).get(j);//Nkvの位置
 
 				//N(カウント)の処理
 				if (zkdn != -1) {
-					//Nds.get(sntnc).set(zsdn, Nds.get(sntnc).get(zsdn) - 1.);
 					Nds.get(i).set(zsdn, Nds.get(i).get(zsdn) - 1.);
-					//Ndk.get(sntnc).set(zkdn, Ndk.get(sntnc).get(zkdn) - 1.);
 					Ndk.get(i).set(zkdn, Ndk.get(i).get(zkdn) - 1.);
-					//Ndsk.get(sntnc).get(zsdn).set(zkdn, Ndsk.get(sntnc).get(zsdn).get(zkdn) - 1.);
 					Ndsk.get(i).get(zsdn).set(zkdn, Ndsk.get(i).get(zsdn).get(zkdn) - 1.);
 					Ns.set(zsdn, Ns.get(zsdn) - 1.);
 					Nk.set(zkdn, Nk.get(zkdn) - 1.);
@@ -232,7 +232,6 @@ public class Layer_TopicModel implements Serializable {
 						double calc_zkdn = 0;
 						
 						calc_zkdn = (Ns.get(s) + alphas.get(s)) * 
-								//(Ndsk.get(sntnc).get(s).get(k) + alphak.get(s).get(k)) /
 								(Ndsk.get(i).get(s).get(k) + alphak.get(s).get(k)) /
 								(Ns.get(s) + alphask) * 
 								(Nkv.get(nskv).get(k) + beta) / 
@@ -273,16 +272,13 @@ public class Layer_TopicModel implements Serializable {
 
 				 //N(カウント)の更新
 				 zsdn = ZSdn.get(i).get(j);
-				 //Nds.get(sntnc).set(zsdn, Nds.get(sntnc).get(zsdn) + 1.);
 				 Nds.get(i).set(zsdn, Nds.get(i).get(zsdn) + 1.);
 				 Ns.set(zsdn, Ns.get(zsdn) + 1.);
 				 Nsv.get(nskv).set(zsdn, Nsv.get(nskv).get(zsdn) + 1.);
 				 zkdn = ZKdn.get(i).get(j);
-				 //Ndk.get(sntnc).set(zkdn, Ndk.get(sntnc).get(zkdn) + 1.);
 				 Ndk.get(i).set(zkdn, Ndk.get(i).get(zkdn) + 1.);
 				 Nk.set(zkdn, Nk.get(zkdn) + 1.);
 				 Nkv.get(nskv).set(zkdn, Nkv.get(nskv).get(zkdn) + 1.);
-				 //Ndsk.get(sntnc).get(zsdn).set(zkdn, Ndsk.get(sntnc).get(zsdn).get(zkdn) + 1.);
 				 Ndsk.get(i).get(zsdn).set(zkdn, Ndsk.get(i).get(zsdn).get(zkdn) + 1.);
 			}
 		}
@@ -317,11 +313,9 @@ public class Layer_TopicModel implements Serializable {
 			}
 			for (int i = 0; i < sentence.size(); i++) {
 				try {
-					//newas += Gamma.digamma(Nds.get(sentence.get(i)).get(s) + alphas.get(s)) 
 					newas += Gamma.digamma(Nds.get(i).get(s) + alphas.get(s)) 
 							- sdigamma;
 				} catch(java.lang.Error e) {
-					//System.out.println("a0s_Nds:" + Nds.get(sentence.get(i)).get(s));
 					System.out.println("a0s_Nds:" + Nds.get(i).get(s));
 					System.exit(-1);
 				}
@@ -356,15 +350,12 @@ public class Layer_TopicModel implements Serializable {
 					System.exit(-1);
 				}
 				for (int i = 0; i < sentence.size(); i++) {
-					try {
-						//new_alpha_nume += Gamma.digamma(Ndsk.get(sentence.get(i)).get(s).get(t) + alphak.get(s).get(t)) 
+					try { 
 						new_alpha_nume += Gamma.digamma(Ndsk.get(i).get(s).get(t) + alphak.get(s).get(t)) 
 								- sigdigammask;
-						//new_alpha_denomina += Gamma.digamma(Nds.get(sentence.get(i)).get(s) + sigalphak) 
 						new_alpha_denomina += Gamma.digamma(Nds.get(i).get(s) + sigalphak) 
 								- digammasigalpha;
 					} catch(java.lang.Error e) {
-						//System.out.println("ask_ndsk nds" + Ndsk.get(sentence.get(i)).get(s).get(t) + " " + Nds.get(sentence.get(i)).get(s));
 						System.out.println("ask_ndsk nds" + Ndsk.get(i).get(s).get(t) + " " + Nds.get(i).get(s));
 						System.exit(-1);
 					}

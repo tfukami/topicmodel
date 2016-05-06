@@ -41,6 +41,7 @@ public class TopicModel implements Serializable {
 	public HashMap<String, ArrayList<Double>> Ndk;//{sentence,[topic,数]
 	public ArrayList<Double> Nk;//{topic順}
 	public AllWordVector awv;//ワード種類
+	private ArrayList<ArrayList<Integer>> wordcorpus;
 	public ArrayList<ArrayList<Double>> Nkv;//各topicに含まれる数：awvに対応[ワード種類,topic]
 	public double V;//単語種類数
 	private int OUTPUT_NUM;//出力するワード数
@@ -103,6 +104,7 @@ public class TopicModel implements Serializable {
 		//Zdn,Ndk初期化：全て-1,0
 		Zdn = new ArrayList<ArrayList<Integer>>();
 		Ndk = new HashMap<String, ArrayList<Double>>();
+		wordcorpus = new ArrayList<ArrayList<Integer>>(sentence.size());
 		for (int i = 0; i < sentence.size(); i++) {
 			ArrayList<Integer> tmp = new ArrayList<Integer>();
 			for (int j = 0; j < origin.get(i).size(); j++) {
@@ -115,6 +117,22 @@ public class TopicModel implements Serializable {
 				tmpk.add(0.);
 			}
 			Ndk.put(sentence.get(i), tmpk);
+			
+			//corpus setting
+			ArrayList<Integer> tmpc = new ArrayList<Integer>(origin.get(i).size());
+			for (int j = 0; j < origin.get(i).size(); j++) {
+				for (int k = 0; k < awv.CollectWrd.size(); k++) {
+					int c = -1;
+					if (awv.CollectWrd.get(k).equals(origin.get(i).get(j)) &&
+							awv.CollectHnsh.get(k).equals(hinshi.get(i).get(j)) &&
+							awv.CollectDHnsh.get(k).equals(dhinshi.get(i).get(j))) {
+						c = k;
+						break;
+					}
+					tmpc.add(c);
+				}
+			}
+			wordcorpus.add(tmpc);
 		}
 
 		//Nkv初期化：
@@ -145,15 +163,7 @@ public class TopicModel implements Serializable {
 			for (int j = 0; j < origin.get(i).size(); j++) {
 				int zdn = Zdn.get(i).get(j);
 				String sntnc = sentence.get(i);
-				int nkv = -1;//Nkvの位置
-				for (int k = 0; k < awv.CollectWrd.size(); k++) {
-					if (awv.CollectWrd.get(k).equals(origin.get(i).get(j)) &&
-							awv.CollectHnsh.get(k).equals(hinshi.get(i).get(j)) &&
-							awv.CollectDHnsh.get(k).equals(dhinshi.get(i).get(j))) {
-						nkv = k;
-						break;
-					}
-				}
+				int nkv = wordcorpus.get(i).get(j);//Nkvの位置
 
 				//N(カウント)の処理
 				if (zdn != -1) {
