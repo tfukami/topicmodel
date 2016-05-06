@@ -1,6 +1,7 @@
 # file
 .classpath
 .project
+.settings
 
 # dir
 /bin
