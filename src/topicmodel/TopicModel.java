@@ -121,16 +121,16 @@ public class TopicModel implements Serializable {
 			//corpus setting
 			ArrayList<Integer> tmpc = new ArrayList<Integer>(origin.get(i).size());
 			for (int j = 0; j < origin.get(i).size(); j++) {
+				int c = -1;
 				for (int k = 0; k < awv.CollectWrd.size(); k++) {
-					int c = -1;
 					if (awv.CollectWrd.get(k).equals(origin.get(i).get(j)) &&
 							awv.CollectHnsh.get(k).equals(hinshi.get(i).get(j)) &&
 							awv.CollectDHnsh.get(k).equals(dhinshi.get(i).get(j))) {
 						c = k;
 						break;
 					}
-					tmpc.add(c);
 				}
+				tmpc.add(c);
 			}
 			wordcorpus.add(tmpc);
 		}
