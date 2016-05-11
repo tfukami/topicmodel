@@ -173,8 +173,7 @@ public class TopicModel implements Serializable {
 				}
 
 				//サンプリング
-				ArrayList<Double> tmp_zdn = new ArrayList<Double>((int)topicNum);
-				ArrayList<Double> tmp_zdn_base = new ArrayList<Double>((int)topicNum);
+				ArrayList<Double> dist_sum = new ArrayList<Double>((int)topicNum);
 				double tmp_zdn_dinomina = 0.;
 				for (int k = 0; k < topicNum; k++) {
 					double calc_zdn = 0;
@@ -183,22 +182,15 @@ public class TopicModel implements Serializable {
 					} else {
 						calc_zdn = (Ndk.get(sntnc).get(k) + alpha) * (Nkv.get(nkv).get(k) + beta) / (Nk.get(k) + beta * V);
 					}
-					tmp_zdn.add(calc_zdn);
-					tmp_zdn_base.add(calc_zdn);
-					tmp_zdn_dinomina += tmp_zdn.get(k);
+					tmp_zdn_dinomina += calc_zdn;
+					dist_sum.add(tmp_zdn_dinomina);
 				}
-				Collections.sort(tmp_zdn_base);
-				Collections.reverse(tmp_zdn_base);
-
 				//RAND()発生：確率の大きいところに入りやすい仕様
 				 rd = new Random();
 				 int k = rd.nextInt((int)topicNum);
-				 double tmp_zdn_nume = 0.;
-				 for (int l = 0; l < tmp_zdn_base.size(); l++) {
-					 tmp_zdn_nume += tmp_zdn_base.get(l);
-					 if ((double)k / (double)topicNum < tmp_zdn_nume / tmp_zdn_dinomina) {
-						 int pos = tmp_zdn.indexOf(tmp_zdn_base.get(l));
-						 Zdn.get(i).set(j, pos);
+				 for (int l = 0; l < dist_sum.size(); l++) {
+					 if ((double)k / topicNum <= dist_sum.get(l) / tmp_zdn_dinomina) {
+						 Zdn.get(i).set(j, l);
 						 break;
 					 }
 				 }
