@@ -1,3 +1,10 @@
-# topic model サンプルプログラム  
-topic modelサンプルプログラム  
-崩壊型ギブスサンプリング
+LDA: (Topic Model)
+====================================================
+using collapsed Gibbs sampling 
+
+
+Requirements
+------------
+
+- CaboCha
+
